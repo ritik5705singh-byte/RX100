@@ -5,35 +5,323 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RX100 Movie Hub</title>
     <style>
-        :root { --blue: #007bff; --red: #dc3545; --light-bg: #f8f9fa; --card-bg: #ffffff; --text: #333; --gray: #6c757d; }
-        body { background: var(--light-bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        :root { --blue: #007bff; --red: #dc3545; --light-bg: #f8f9fa; --card-bg: #ffffff; --text: #333; --gray: #6c757d; --green: #28a745; }
+        body { background: var(--light-bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0; }
         
-        /* Navigation */
         .nav { background: #fff; border-bottom: 1px solid #ddd; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .nav h2 { margin: 0; font-size: 24px; font-weight: bold; color: var(--blue); cursor: pointer; letter-spacing: 1px; }
+        .nav h2 { margin: 0; font-size: 24px; font-weight: bold; color: var(--blue); cursor: pointer; letter-spacing: 1px; font-style: italic; }
 
         .container { width: 100%; max-width: 600px; margin: 0 auto; padding: 15px; box-sizing: border-box; }
 
         /* Admin Panels */
-        .admin-section { background: #fff; border: 1px solid var(--blue); margin-bottom: 20px; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .admin-section h3 { margin-top: 0; color: var(--blue); border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .admin-section { background: #fff; border: 2px solid var(--blue); margin-bottom: 20px; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .stats-badge { background: #e7f3ff; color: var(--blue); padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; margin-bottom: 15px; display: inline-block; }
 
         /* Movie Card */
-        .movie-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); border: 1px solid #eee; }
-        .movie-img { width: 100%; height: 260px; object-fit: cover; cursor: zoom-in; } /* New cursor */
+        .movie-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); border: 1px solid #eee; position: relative; }
+        .movie-img { width: 100%; height: 280px; object-fit: cover; cursor: zoom-in; }
         .movie-content { padding: 15px; }
-        .movie-title { font-size: 18px; font-weight: bold; margin-bottom: 12px; color: #000; }
+        .movie-title { font-size: 19px; font-weight: bold; margin-bottom: 12px; color: #000; }
 
-        /* Buttons */
-        .quality-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        /* Buttons Grid */
+        .quality-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
         .dl-btn { background: #fff; border: 1.5px solid var(--blue); color: var(--blue); text-decoration: none; padding: 8px; text-align: center; border-radius: 6px; font-size: 13px; font-weight: 600; transition: 0.2s; }
         .dl-btn:hover { background: var(--blue); color: #fff; }
+        
+        .share-btn { background: var(--green); color: white; border: none; padding: 8px; width: 100%; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
 
+        /* Comments Section */
+        .comment-box { border-top: 1px solid #eee; padding-top: 10px; margin-top: 15px; }
+        .comment-list { max-height: 150px; overflow-y: auto; margin-bottom: 10px; font-size: 13px; }
+        .single-comment { background: #f1f3f5; padding: 6px 10px; border-radius: 6px; margin-bottom: 5px; }
+        
         .edit-controls { display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px; }
         .ctrl-btn { flex: 1; padding: 8px; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; }
         .btn-edit { background: #ffc107; color: #000; }
         .btn-del { background: var(--red); color: #fff; }
+
+        /* Modals & Overlays */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 5000; backdrop-filter: blur(5px); }
+        .modal { background: #fff; padding: 30px; width: 85%; max-width: 350px; border-radius: 15px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; background: #f1f3f5; border: 1px solid #ddd; color: #333; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        .submit-btn { background: var(--blue); color: #fff; border: none; padding: 14px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        .hidden { display: none !important; }
+
+        /* Full Image Viewer */
+        #img-viewer { display: flex; position: fixed; z-index: 6000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); }
+        #img-viewer img { margin: auto; max-width: 90%; max-height: 80%; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen" class="overlay hidden">
+        <div class="modal">
+            <h2 style="color:var(--blue); margin-bottom:5px;">RX100 Movie Hub</h2>
+            <p style="color:var(--gray); font-size:12px; margin-bottom:20px;">Username & Password daalkar enter karein</p>
+            <input type="text" id="authUser" placeholder="Username daalein">
+            <input type="password" id="authPass" placeholder="Password daalein">
+            <button class="submit-btn" onclick="handleDirectAuth()">ENTER PORTAL / SIGNUP</button>
+        </div>
+    </div>
+
+    <div id="admin-modal" class="overlay hidden">
+        <div class="modal">
+            <h2 style="color:var(--blue)">Master Admin Access</h2>
+            <input type="password" id="adminPassIn" placeholder="Enter Admin Password">
+            <button class="submit-btn" onclick="checkAdminAuth()">Verify Password</button>
+            <button onclick="toggleModal('admin-modal', false)" style="background:none; border:none; color:var(--gray); margin-top:10px;">Close</button>
+        </div>
+    </div>
+
+    <div id="edit-modal" class="overlay hidden">
+        <div class="modal">
+            <h3 style="color:var(--blue)">Edit Movie Details</h3>
+            <input type="hidden" id="editId">
+            <input type="text" id="editTitle" placeholder="Movie Name">
+            <input type="text" id="editImgUrl" placeholder="Image Poster URL">
+            <input type="text" id="edit480" placeholder="480p Link">
+            <input type="text" id="edit720" placeholder="720p Link">
+            <input type="text" id="edit1080" placeholder="1080p Link">
+            <button class="submit-btn" onclick="updateMovie()">Save Changes</button>
+            <button onclick="toggleModal('edit-modal', false)" style="background:none; border:none; color:var(--gray); margin-top:10px;">Cancel</button>
+        </div>
+    </div>
+
+    <div id="img-viewer" class="hidden" onclick="this.classList.add('hidden')">
+        <img id="full-img" src="">
+    </div>
+
+    <div class="nav">
+        <h2 onclick="handleSecretClick()">RX100</h2>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span id="user-display" style="font-size:12px; font-weight:bold; color:var(--gray);"></span>
+            <button onclick="doLogout()" style="background:var(--red); color:#fff; border:none; padding:5px 12px; border-radius:5px; font-weight:bold; cursor:pointer;">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="dashboard" class="admin-section hidden">
+            <div id="visitor-count" class="stats-badge">Members Visited: Loading...</div>
+            <h3>Upload New Movie</h3>
+            <input type="text" id="newTitle" placeholder="Movie Name">
+            <input type="file" id="newImg" accept="image/*">
+            <input type="text" id="new480" placeholder="480p Link">
+            <input type="text" id="new720" placeholder="720p Link">
+            <input type="text" id="new1080" placeholder="1080p Link">
+            <button class="submit-btn" id="upBtn" onclick="uploadMovie()">PUBLISH TO FEED</button>
+        </div>
+
+        <div id="feed"></div>
+    </div>
+
+    <script>
+        const API_URL = "https://osho-app-62a56-default-rtdb.europe-west1.firebasedatabase.app/";
+        const IMGBB_KEY = "ea86e331f6f99f689cd04bef5b09c6fa";
+        const ADMIN_SECRET_PASS = "Ritik"; 
+
+        let clickCount = 0;
+        function handleSecretClick() {
+            clickCount++;
+            if(clickCount >= 5) {
+                toggleModal('admin-modal', true);
+                clickCount = 0;
+            }
+        }
+
+        function toggleModal(id, show) {
+            document.getElementById(id).classList.toggle('hidden', !show);
+        }
+
+        // --- Smart Automatic Account & Login System ---
+        async function handleDirectAuth() {
+            const user = document.getElementById('authUser').value.trim();
+            const pass = document.getElementById('authPass').value.trim();
+            if(!user || !pass) return alert("Username aur Password dono zaroori hain!");
+
+            const check = await fetch(`${API_URL}portal_users/${user}.json`);
+            const existingUser = await check.json();
+
+            if(existingUser) {
+                // Agar user pehle se bana hai, toh password check karo
+                if(existingUser.pass === pass) {
+                    localStorage.setItem('rx_member', user);
+                    location.reload();
+                } else {
+                    alert("Ye Username pehle se booked hai, ya aapka password galat hai!");
+                }
+            } else {
+                // Agar naya user hai, toh account banao aur DIRECT LOGIN kar do!
+                await fetch(`${API_URL}portal_users/${user}.json`, { method: 'PUT', body: JSON.stringify({ pass }) });
+                localStorage.setItem('rx_member', user);
+                alert("Aapka Member Account ban gaya hai aur aap login ho chuke hain!");
+                location.reload();
+            }
+        }
+
+        function checkAdminAuth() {
+            if(document.getElementById('adminPassIn').value === ADMIN_SECRET_PASS) {
+                localStorage.setItem('rx_admin_power', 'true');
+                location.reload();
+            } else { alert("Wrong Admin Password!"); }
+        }
+
+        async function init() {
+            const isMember = localStorage.getItem('rx_member');
+            const isAdmin = localStorage.getItem('rx_admin_power') === 'true';
+
+            if(!isMember && !isAdmin) {
+                document.getElementById('auth-screen').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('user-display').innerText = isAdmin ? "Admin Control" : `Hi, ${isMember}`;
+
+            let vRes = await fetch(`${API_URL}visits.json`);
+            let count = await vRes.json() || 0;
+            if(!sessionStorage.getItem('counted')) {
+                count++;
+                await fetch(`${API_URL}visits.json`, { method:'PUT', body: JSON.stringify(count) });
+                sessionStorage.setItem('counted', 'true');
+            }
+
+            if(isAdmin) {
+                document.getElementById('dashboard').classList.remove('hidden');
+                document.getElementById('visitor-count').innerText = `Total Members Visited: ${count}`;
+            }
+
+            loadFeed(isAdmin);
+        }
+
+        async function uploadMovie() {
+            const title = document.getElementById('newTitle').value;
+            const file = document.getElementById('newImg').files[0];
+            if(!title || !file) return alert("Title aur Poster dono chahiye!");
+
+            document.getElementById('upBtn').innerText = "Uploading to Server...";
+            
+            const fd = new FormData(); fd.append("image", file);
+            const resImg = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {method:"POST", body:fd});
+            const imgData = await resImg.json();
+
+            const movie = { 
+                title, 
+                poster: imgData.data.url, 
+                l480: document.getElementById('new480').value,
+                l720: document.getElementById('new720').value,
+                l1080: document.getElementById('new1080').value
+            };
+
+            await fetch(`${API_URL}rx_movies.json`, { method:'POST', body: JSON.stringify(movie) });
+            location.reload();
+        }
+
+        async function loadFeed(isAdmin) {
+            const res = await fetch(`${API_URL}rx_movies.json`);
+            const data = await res.json();
+            const feed = document.getElementById('feed');
+            feed.innerHTML = "";
+            if(!data) return;
+
+            Object.keys(data).reverse().forEach(id => {
+                const m = data[id];
+                const sanitizedTitle = m.title.replace(/'/g, "\\'");
+                
+                let commentsHtml = "";
+                if(m.comments) {
+                    Object.keys(m.comments).forEach(cId => {
+                        commentsHtml += `<div class="single-comment"><b>${m.comments[cId].user}:</b> ${m.comments[cId].text}</div>`;
+                    });
+                }
+
+                feed.innerHTML += `
+                    <div class="movie-card">
+                        <img src="${m.poster}" class="movie-img" onclick="document.getElementById('full-img').src='${m.poster}'; document.getElementById('img-viewer').classList.remove('hidden')">
+                        <div class="movie-content">
+                            <div class="movie-title">${m.title}</div>
+                            <div class="quality-grid">
+                                ${m.l480 ? `<a href="${m.l480}" target="_blank" class="dl-btn">480p</a>` : ''}
+                                ${m.l720 ? `<a href="${m.l720}" target="_blank" class="dl-btn">720p</a>` : ''}
+                                ${m.l1080 ? `<a href="${m.l1080}" target="_blank" class="dl-btn">1080p</a>` : ''}
+                            </div>
+                            <button class="share-btn" onclick="shareMovie('${sanitizedTitle}', '${m.poster}')">✈️ Share Movie Link</button>
+                            
+                            <div class="comment-box">
+                                <div class="comment-list">${commentsHtml}</div>
+                                <div style="display:flex; gap:5px;">
+                                    <input type="text" id="c_in_${id}" placeholder="Write a comment..." style="margin:0; padding:8px;">
+                                    <button onclick="addComment('${id}')" style="background:var(--blue); color:white; border:none; border-radius:5px; padding:0 15px; cursor:pointer;">Post</button>
+                                </div>
+                            </div>
+
+                            ${isAdmin ? `
+                                <div class="edit-controls">
+                                    <button class="ctrl-btn btn-edit" onclick="openEdit('${id}', '${sanitizedTitle}', '${m.poster}', '${m.l480}', '${m.l720}', '${m.l1080}')">EDIT POST</button>
+                                    <button class="ctrl-btn btn-del" onclick="deleteMovie('${id}')">DELETE POST</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>`;
+            });
+        }
+
+        async function addComment(movieId) {
+            const input = document.getElementById(`c_in_${movieId}`);
+            const text = input.value.trim();
+            if(!text) return;
+            
+            const user = localStorage.getItem('rx_member') || "Admin";
+            await fetch(`${API_URL}rx_movies/${movieId}/comments.json`, {
+                method: 'POST',
+                body: JSON.stringify({ user, text })
+            });
+            input.value = "";
+            location.reload();
+        }
+
+        function openEdit(id, title, poster, l480, l720, l1080) {
+            document.getElementById('editId').value = id;
+            document.getElementById('editTitle').value = title;
+            document.getElementById('editImgUrl').value = poster;
+            document.getElementById('edit480').value = l480 || '';
+            document.getElementById('edit720').value = l720 || '';
+            document.getElementById('edit1080').value = l1080 || '';
+            toggleModal('edit-modal', true);
+        }
+
+        async function updateMovie() {
+            const id = document.getElementById('editId').value;
+            const updates = {
+                title: document.getElementById('editTitle').value,
+                poster: document.getElementById('editImgUrl').value,
+                l480: document.getElementById('edit480').value,
+                l720: document.getElementById('edit720').value,
+                l1080: document.getElementById('edit1080').value
+            };
+            await fetch(`${API_URL}rx_movies/${id}.json`, { method:'PATCH', body: JSON.stringify(updates) });
+            location.reload();
+        }
+
+        async function deleteMovie(id) {
+            if(confirm("Humesha ke liye delete karein?")) {
+                await fetch(`${API_URL}rx_movies/${id}.json`, { method:'DELETE' });
+                location.reload();
+            }
+        }
+
+        function shareMovie(title, img) {
+            const text = `🍿 *${title}* Full Movie Download Now! \n\nCheck details here: ${window.location.href}`;
+            if(navigator.share) { navigator.share({ title, text, url: window.location.href }); }
+            else { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`); }
+        }
+
+        function doLogout() { localStorage.clear(); location.reload(); }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
 
         /* Modals */
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 5000; backdrop-filter: blur(4px); }
